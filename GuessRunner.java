@@ -32,7 +32,6 @@ public class GuessRunner {
 				}
 			}
 		}
-		System.out.printf("\t");
 		if (strikes==4)	{ // game over
 			System.out.printf("4 strikes - Game over\n");
 			return new Result(hits, strikes);
@@ -60,14 +59,15 @@ public class GuessRunner {
 			int target = (int) ((Math.random() * (9999 - 1000)) + 1000);
 
 			Result res = null;
-			System.out.println("Guess\tResponse\n");
+			System.out.println();
+			System.out.println("Guess\tResponse");
 			while (res == null || res.getStrikes() < 4) {
 				/* take a guess from user provided class
 				 * the user provided class must be a Guess.class file
 				 * that has implemented a static function called make_guess()
 				 */
 				int guess = Guess.make_guess(res);
-				System.out.printf("%d\n", guess);
+				System.out.printf("%d\t", guess);
 
 				if (guess == -1) {    // user quits
 					System.out.printf("you quit: %d\n", target);
@@ -81,7 +81,7 @@ public class GuessRunner {
 				res = processGuess(target, guess);
 			}
 			try {
-				File file = new File("record_AABC.csv");
+				File file = new File("record_AABB.csv");
 				FileWriter fr = new FileWriter(file, true);
 				BufferedWriter br = new BufferedWriter(fr);
 				PrintWriter pr = new PrintWriter(br);

@@ -19,7 +19,7 @@ public class Base implements IMastermindStrat {
     public Integer reset() {
         this.remainingNumbers.clear();
         this.remainingNumbers.addAll(this.allNumbers);
-        this.lastGuess = 1123;
+        this.lastGuess = 1122;
         return this.lastGuess;
     }
 

@@ -81,7 +81,7 @@ public class GuessRunner {
 				res = processGuess(target, guess);
 			}
 			try {
-				File file = new File("record_AABB.csv");
+				File file = new File("record_AAAA.csv");
 				FileWriter fr = new FileWriter(file, true);
 				BufferedWriter br = new BufferedWriter(fr);
 				PrintWriter pr = new PrintWriter(br);

@@ -50,56 +50,59 @@ public class GuessRunner {
 
 	public static void main(String[] args) {
 		int j = 0;
-		for(int i = 0; i < 100000; i++) {
-			int guess_cnt = 0;
-			/* A dummy value, you need to code here
-			 * to get a target number for your oponent
-			 * should be a random number between [1000-9999]
-			 */
-			int target = (int) ((Math.random() * (9999 - 1000)) + 1000);
-
-			Result res = null;
-			System.out.println();
-			System.out.println("Guess\tResponse");
-			while (res == null || res.getStrikes() < 4) {
-				/* take a guess from user provided class
-				 * the user provided class must be a Guess.class file
-				 * that has implemented a static function called make_guess()
+		for (int first = 1000; first < 10000; first++) {
+			for (int i = 1000; i < 10000; i++) {
+				int guess_cnt = 0;
+				/* A dummy value, you need to code here
+				 * to get a target number for your oponent
+				 * should be a random number between [1000-9999]
 				 */
-				int guess = Guess.make_guess(res);
-				System.out.printf("%d\t", guess);
+//			int target = (int) ((Math.random() * (9999 - 1000)) + 1000);
+				Guess.reset(first);
+				int target = i;
+				Result res = new Result();
+				System.out.println();
+				System.out.println("Guess\tResponse");
+				while (res == null || res.getStrikes() < 4) {
+					/* take a guess from user provided class
+					 * the user provided class must be a Guess.class file
+					 * that has implemented a static function called make_guess()
+					 */
+					int guess = Guess.make_guess(res.getHits(), res.getStrikes());
+					System.out.printf("%d\t", guess);
 
-				if (guess == -1) {    // user quits
-					System.out.printf("you quit: %d\n", target);
-					return;
+					if (guess == -1) {    // user quits
+						System.out.printf("you quit: %d\n", target);
+						return;
+					}
+					guess_cnt++;
+
+					/* You need to code this method to process a guess
+					 * provided by your oponent
+					 */
+					res = processGuess(target, guess);
 				}
-				guess_cnt++;
-
-				/* You need to code this method to process a guess
-				 * provided by your oponent
-				 */
-				res = processGuess(target, guess);
+				try {
+					File file = new File("record_knuth.csv");
+					FileWriter fr = new FileWriter(file, true);
+					BufferedWriter br = new BufferedWriter(fr);
+					PrintWriter pr = new PrintWriter(br);
+					StringBuilder sb = new StringBuilder();
+					sb.append(first);
+					sb.append(",");
+					sb.append(target);
+					sb.append(",");
+					sb.append(guess_cnt);
+					pr.println(sb.toString());
+					pr.close();
+					br.close();
+					fr.close();
+				} catch (IOException e) {
+					System.out.println(e);
+				}
+				j++;
+				System.out.printf("Target: %d - Number of guesses: %d\n", target, guess_cnt);
 			}
-			try {
-				File file = new File("record_AAAA.csv");
-				FileWriter fr = new FileWriter(file, true);
-				BufferedWriter br = new BufferedWriter(fr);
-				PrintWriter pr = new PrintWriter(br);
-				StringBuilder sb = new StringBuilder();
-				sb.append(j);
-				sb.append(",");
-				sb.append(target);
-				sb.append(",");
-				sb.append(guess_cnt);
-				pr.println(sb.toString());
-				pr.close();
-				br.close();
-				fr.close();
-			}catch (IOException e){
-				System.out.println(e);
-			}
-			j++;
-			System.out.printf("Target: %d - Number of guesses: %d\n", target, guess_cnt);
 		}
 	}
 }

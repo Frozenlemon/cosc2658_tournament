@@ -14,10 +14,10 @@ public class Generator {
 
     public static List<Result> createAllResult(int length){
         List<Result> result = new ArrayList<>();
-        for (int hits = 0; hits < length; hits++){
+        for (int hits = 0; hits <= length; hits++){
             for (int strikes = 0; strikes < length; strikes++){
                 int sum = hits + strikes;
-                if (sum <= length && !(strikes == length - 1 && hits == 1)) {
+                if (sum <= length && !(strikes == length - 1 && hits == length)) {
                     result.add(new Result(hits, strikes));
                 }
             }

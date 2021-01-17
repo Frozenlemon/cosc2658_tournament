@@ -8,6 +8,7 @@ public class Base implements IMastermindStrat {
     protected final List<Result> allResults;
     protected List<Integer> remainingNumbers;
     protected Integer lastGuess;
+    protected boolean cache = false;
 
     public Base(){
         this.allNumbers = Generator.createAllNumber();
@@ -39,10 +40,17 @@ public class Base implements IMastermindStrat {
     }
 
     protected void removeRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result){
-        for (int i = numbers.size() - 1; i >= 0; i--){
-            Result temp = checkGuess(lastGuess, numbers.get(i));
-            if (temp.getStrikes() != result.getStrikes() || temp.getHits() != result.getHits())
-                numbers.remove(i);
+        if (cache && Cache.cache.containsKey(result)) {
+            numbers = Cache.cache.get(result);
+            cache = false;
+        }
+        else {
+            for (int i = numbers.size() - 1; i >= 0; i--) {
+                Result temp = checkGuess(lastGuess, numbers.get(i));
+                if (temp.getStrikes() != result.getStrikes() || temp.getHits() != result.getHits())
+                    numbers.remove(i);
+            }
+            Cache.cache.put(result, numbers);
         }
     }
 

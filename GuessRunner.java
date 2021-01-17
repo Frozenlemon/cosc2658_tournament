@@ -49,8 +49,8 @@ public class GuessRunner {
 	}
 
 	public static void main(String[] args) {
-		int j = 0;
 		for (int first = 1000; first < 10000; first++) {
+			Cache.cache = new HashMap<>();
 			for (int i = 1000; i < 10000; i++) {
 				int guess_cnt = 0;
 				/* A dummy value, you need to code here
@@ -59,7 +59,11 @@ public class GuessRunner {
 				 */
 //			int target = (int) ((Math.random() * (9999 - 1000)) + 1000);
 				Guess.reset(first);
-				int target = i;
+				int target;
+				if (first == 1000)
+					 target = i + 2166;
+				else
+					target = i;
 				Result res = new Result();
 				System.out.println();
 				System.out.println("Guess\tResponse");
@@ -100,7 +104,6 @@ public class GuessRunner {
 				} catch (IOException e) {
 					System.out.println(e);
 				}
-				j++;
 				System.out.printf("Target: %d - Number of guesses: %d\n", target, guess_cnt);
 			}
 		}

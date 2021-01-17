@@ -38,7 +38,6 @@ public class Guess {
 		remainingNumbers.addAll(allNumbers);
 		first = true;
 		lastGuess = firstGuess;
-		Cache.cache = new HashMap<>();
 	}
 
 //	Knuth mix max guess

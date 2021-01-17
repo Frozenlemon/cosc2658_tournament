@@ -10,40 +10,28 @@ import java.util.List;
  * PLEASE DO NOT CHANGE THE NAME OF THE CLASS AND THE METHOD
  */
 public class Guess {
-
-	private static boolean first = true;
-	protected final static int NUMBER_LENGTH = 4;
-	protected final static List<Integer> allNumbers = createAllNumber();;
-	protected final static List<Result> allResults = createAllResult(NUMBER_LENGTH);;
-	protected static List<Integer> remainingNumbers = new ArrayList<>();
-	protected static Integer lastGuess;
-	protected static boolean cache = false;
+	private final static int INITIAL_GUESS = 1000;
+	private final static int NUMBER_LENGTH = 4;
+	private final static List<Integer> allNumbers = createAllNumber();;
+	private final static List<Result> allResults = createAllResult(NUMBER_LENGTH);;
+	private static List<Integer> remainingNumbers = new ArrayList<>(allNumbers);
+	private static Integer lastGuess = null;
 	
 	public static int make_guess(int hits, int strike) {
 		int myGuess;
-		if (first) {
-			myGuess = lastGuess;
-			first = false;
-			cache = true;
-		}
-		else
+		if (lastGuess == null) {
+			myGuess = INITIAL_GUESS;
+		} else {
 			myGuess = guess(new Result(hits, strike));
+		}
+		lastGuess = myGuess;
 		return myGuess;
 	}
 
-
-//	Reset the all initial value
-	public static void reset(int firstGuess) {
-		remainingNumbers.clear();
-		remainingNumbers.addAll(allNumbers);
-		first = true;
-		lastGuess = firstGuess;
-	}
-
-//	Knuth mix max guess
+	//	Knuth mix max guess
 	public static Integer guess(Result result){
 		removeRemainingNumber(remainingNumbers, lastGuess, result);
-		lastGuess = remainingNumbers.get(0);
+		int guess = remainingNumbers.get(0);
 		int minMaximum = Integer.MAX_VALUE;
 		for (Integer number: allNumbers){
 			int maximum = 0;
@@ -53,18 +41,14 @@ public class Guess {
 			}
 			if (maximum < minMaximum){
 				minMaximum = maximum;
-				lastGuess = number;
+				guess = number;
 			}
 		}
-		return lastGuess;
+		return guess;
 	}
 
-//	get remaining number base on the previous guess and result of previous guess either from previous cache or from new array
-	protected static List<Integer> getRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result) {
-		if (cache && Cache.cache.containsKey(result)) {
-			numbers = Cache.cache.get(result);
-			cache = false;
-		}
+	//	get remaining number base on the previous guess and result of previous guess either from previous cache or from new array
+	private static List<Integer> getRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result) {
 		List<Integer> remainResult = new ArrayList<>();
 		for (Integer number : numbers) {
 			Result temp = checkGuess(lastGuess, number);
@@ -74,18 +58,12 @@ public class Guess {
 		return remainResult;
 	}
 
-//	remove from an array all unfit guesses base on previous guess and result
-	protected static void removeRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result){
-		if (cache && Cache.cache.containsKey(result)) {
-			numbers = Cache.cache.get(result);
-		}
-		else {
-			for (int i = numbers.size() - 1; i >= 0; i--) {
-				Result temp = checkGuess(lastGuess, numbers.get(i));
-				if (temp.getStrikes() != result.getStrikes() || temp.getHits() != result.getHits())
-					numbers.remove(i);
-			}
-			Cache.cache.put(result, numbers);
+	//	remove from an array all unfit guesses base on previous guess and result
+	private static void removeRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result){
+		for (int i = numbers.size() - 1; i >= 0; i--) {
+			Result temp = checkGuess(lastGuess, numbers.get(i));
+			if (temp.getStrikes() != result.getStrikes() || temp.getHits() != result.getHits())
+				numbers.remove(i);
 		}
 	}
 
@@ -118,18 +96,17 @@ public class Guess {
 		return new Result(hits, strikes);
 	}
 
-//	create all possible guesses from 1000 to 9999
-	public static List<Integer> createAllNumber(){
+	//	create all possible guesses from 1000 to 9999
+	private static List<Integer> createAllNumber(){
 		final List<Integer> result = new LinkedList<>();
 		for (int i = 1000; i < 10000; i++){
 			result.add(i);
 		}
-		System.out.println(result.size());
 		return result;
 	}
 
-//	create all possible result for any guess
-	public static List<Result> createAllResult(int length){
+	//	create all possible result for any guess
+	private static List<Result> createAllResult(int length){
 		List<Result> result = new ArrayList<>();
 		for (int hits = 0; hits <= length; hits++){
 			for (int strikes = 0; strikes < length; strikes++){

@@ -62,6 +62,10 @@ public class Guess {
 
 //	get remaining number base on the previous guess and result of previous guess either from previous cache or from new array
 	protected static List<Integer> getRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result) {
+		if (cache && Cache.cache.containsKey(result)) {
+			numbers = Cache.cache.get(result);
+			cache = false;
+		}
 		List<Integer> remainResult = new ArrayList<>();
 		for (Integer number : numbers) {
 			Result temp = checkGuess(lastGuess, number);
@@ -75,7 +79,6 @@ public class Guess {
 	protected static void removeRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result){
 		if (cache && Cache.cache.containsKey(result)) {
 			numbers = Cache.cache.get(result);
-			cache = false;
 		}
 		else {
 			for (int i = numbers.size() - 1; i >= 0; i--) {

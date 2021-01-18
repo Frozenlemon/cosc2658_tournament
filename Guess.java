@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /*
  * You need to implement an algorithm to make guesses
@@ -11,23 +8,21 @@ import java.util.List;
  */
 public class Guess {
 
-	private static boolean first = true;
+	private static int first = 0;
 	protected final static int NUMBER_LENGTH = 4;
-	protected final static List<Integer> allNumbers = createAllNumber();;
-	protected final static List<Result> allResults = createAllResult(NUMBER_LENGTH);;
+	public final static List<Integer> allNumbers = createAllNumber();;
+	public final static List<Result> allResults = createAllResult(NUMBER_LENGTH);;
 	protected static List<Integer> remainingNumbers = new ArrayList<>();
 	protected static Integer lastGuess;
-	protected static boolean cache = false;
 	
 	public static int make_guess(int hits, int strike) {
 		int myGuess;
-		if (first) {
+		if (first == 0) {
 			myGuess = lastGuess;
-			first = false;
-			cache = true;
 		}
 		else
 			myGuess = guess(new Result(hits, strike));
+		first++;
 		return myGuess;
 	}
 
@@ -36,57 +31,58 @@ public class Guess {
 	public static void reset(int firstGuess) {
 		remainingNumbers.clear();
 		remainingNumbers.addAll(allNumbers);
-		first = true;
+		first = 0;
 		lastGuess = firstGuess;
 	}
 
 //	Knuth mix max guess
 	public static Integer guess(Result result){
-		removeRemainingNumber(remainingNumbers, lastGuess, result);
-		lastGuess = remainingNumbers.get(0);
-		int minMaximum = Integer.MAX_VALUE;
-		for (Integer number: allNumbers){
-			int maximum = 0;
-			for (Result r: allResults){
-				int removedIntegerSize = getRemainingNumber(remainingNumbers, number, r).size();
-				maximum = Math.max(removedIntegerSize, maximum);
-			}
-			if (maximum < minMaximum){
-				minMaximum = maximum;
-				lastGuess = number;
-			}
-		}
+		remainingNumbers = removeRemainingNumber(remainingNumbers, lastGuess, result);
+//		List<Integer> entropyGuess = entropy(remainingNumbers, result);
+//		first++;
+		List<Integer> bestGuess = miniMax(remainingNumbers, result);
+
+		List<Integer> maxPartsGuess = maxParts(bestGuess, result);
+
+//
+
+		lastGuess = maxPartsGuess.get(0);
+
 		return lastGuess;
 	}
 
 //	get remaining number base on the previous guess and result of previous guess either from previous cache or from new array
 	protected static List<Integer> getRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result) {
-		if (cache && Cache.cache.containsKey(result)) {
-			numbers = Cache.cache.get(result);
-			cache = false;
-		}
 		List<Integer> remainResult = new ArrayList<>();
+		if (first == 1 && Cache.cache2.containsKey(lastGuess) && Cache.cache2.get(lastGuess).containsKey(result))
+			return Cache.cache2.get(lastGuess).get(result);
 		for (Integer number : numbers) {
 			Result temp = checkGuess(lastGuess, number);
 			if (temp.getHits() == result.getHits() && temp.getStrikes() == result.getStrikes())
 				remainResult.add(number);
 		}
+		Map<Result, List<Integer>> temp1 = new HashMap<>();
+		if (first == 1 && !Cache.cache2.containsKey(lastGuess)) {
+			Cache.cache2.put(lastGuess, temp1);
+		}
+		temp1 = Cache.cache2.get(lastGuess);
+		if (first == 1 && !Cache.cache2.get(lastGuess).containsKey(result))
+			temp1.put(result, remainResult);
 		return remainResult;
 	}
 
 //	remove from an array all unfit guesses base on previous guess and result
-	protected static void removeRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result){
-		if (cache && Cache.cache.containsKey(result)) {
-			numbers = Cache.cache.get(result);
+	public static List<Integer> removeRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result){
+		if (first == 1 && Cache.cache.containsKey(result)){
+//			List<Integer> r = new ArrayList<>(Cache.cache.get(result));
+			return Cache.cache.get(result);
 		}
-		else {
-			for (int i = numbers.size() - 1; i >= 0; i--) {
-				Result temp = checkGuess(lastGuess, numbers.get(i));
-				if (temp.getStrikes() != result.getStrikes() || temp.getHits() != result.getHits())
-					numbers.remove(i);
-			}
-			Cache.cache.put(result, numbers);
+		for (int i = numbers.size() - 1; i >= 0; i--) {
+			Result temp = checkGuess(lastGuess, numbers.get(i));
+			if (temp.getStrikes() != result.getStrikes() || temp.getHits() != result.getHits())
+				numbers.remove(i);
 		}
+		return numbers;
 	}
 
 	private static Result checkGuess(int target, int guess) {
@@ -134,11 +130,120 @@ public class Guess {
 		for (int hits = 0; hits <= length; hits++){
 			for (int strikes = 0; strikes < length; strikes++){
 				int sum = hits + strikes;
-				if (sum <= length && !(strikes == length - 1 && hits == length)) {
+				if (sum <= length && !(strikes == length && hits == length)) {
 					result.add(new Result(hits, strikes));
+					System.out.println(hits + " " + strikes);
 				}
 			}
 		}
 		return result;
+	}
+
+	protected static class EncodedPart {
+
+		private int size;
+		private Integer firstCode;
+
+		public EncodedPart(int size, Integer firstCode) {
+			this.size = size;
+			this.firstCode = firstCode;
+		}
+
+		public Boolean equals(EncodedPart other) {
+			return this.size == other.size && this.firstCode.equals(other.firstCode);
+		}
+
+	}
+
+	protected static List<Integer> maxParts(List<Integer> startingArray, Result result){
+		List<Integer> maxPartsGuess = new ArrayList<>();
+		maxPartsGuess.add(startingArray.get(0));
+		int mostParts = 1;
+		for(Integer number: allNumbers) {
+			Map<EncodedPart, Boolean> parts = new HashMap<>();
+			for (Result r: allResults) {
+				List<Integer> partition = getRemainingNumber(startingArray, number, r);
+				if (!partition.isEmpty()){
+					int size = partition.size();
+					Integer firstCode = partition.get(0);
+					parts.put(new EncodedPart(size, firstCode), true);
+				}
+			}
+
+			int numberOfParts = parts.size();
+			if (numberOfParts == mostParts && numberOfParts > 1) {
+				maxPartsGuess.add(number);
+			}
+			if (numberOfParts > mostParts) {
+				mostParts = numberOfParts;
+				maxPartsGuess.clear();
+				maxPartsGuess.add(number);
+			}
+
+			List<Integer> consistentBestMaxPartsGuesses = getRemainingNumber(maxPartsGuess, lastGuess, result);
+			if (!consistentBestMaxPartsGuesses.isEmpty())
+				maxPartsGuess = consistentBestMaxPartsGuesses;
+		}
+		return maxPartsGuess;
+	}
+
+	protected static List<Integer> miniMax(List<Integer> startingArray,Result result) {
+		List<Integer> bestGuess = new ArrayList<>();
+		bestGuess.add(startingArray.get(0));
+		int minMaximum = Integer.MAX_VALUE;
+		for (Integer number: allNumbers){
+			int maximum = 0;
+			for (Result r: allResults){
+				int removedIntegerSize = getRemainingNumber(startingArray, number, r).size();
+				maximum = Math.max(removedIntegerSize, maximum);
+			}
+			if (maximum == minMaximum)
+				bestGuess.add(number);
+
+			if (maximum < minMaximum){
+				minMaximum = maximum;
+				bestGuess.clear();
+				bestGuess.add(number);
+			}
+		}
+
+		List<Integer> consistentBestGuesses = getRemainingNumber(
+				bestGuess, lastGuess, result);
+		if(!consistentBestGuesses.isEmpty()) {
+			bestGuess = consistentBestGuesses;
+		}
+		return bestGuess;
+	}
+
+	protected static List<Integer> entropy(List<Integer> startingArray, Result result) {
+		double maxEntropy = 0;
+		int totalSize = startingArray.size();
+		List<Integer> entropyGuess = new ArrayList<>();
+		entropyGuess.add(startingArray.get(0));
+		for(Integer number: allNumbers){
+			double entropy = 0;
+			for (Result r: allResults){
+				int partSize = getRemainingNumber(startingArray, number, r).size();
+				if (partSize != 0){
+					double I = Math.log(1.0 * totalSize/partSize) / Math.log(2);
+					double P = 1.0 * partSize/totalSize;
+					entropy += entropy + I * P;
+				}
+			}
+			if (entropy == maxEntropy && entropy > 0)
+				entropyGuess.add(number);
+
+			if (entropy > maxEntropy){
+				maxEntropy = entropy;
+				entropyGuess.clear();
+				entropyGuess.add(number);
+			}
+		}
+
+		List<Integer> consistentBestEntropyGuesses = getRemainingNumber(entropyGuess, lastGuess, result);
+		if (!consistentBestEntropyGuesses.isEmpty())
+			entropyGuess = consistentBestEntropyGuesses;
+
+		return entropyGuess;
 	}
 }

@@ -49,8 +49,8 @@ public class GuessRunner {
 	}
 
 	public static void main(String[] args) {
-		for (int first = 1000; first < 10000; first++) {
-			Cache.cache = new HashMap<>();
+		for (int first = 2257; first < 10000; first++) {
+			Cache.init(first);
 			for (int i = 1000; i < 10000; i++) {
 				int guess_cnt = 0;
 				/* A dummy value, you need to code here
@@ -59,11 +59,7 @@ public class GuessRunner {
 				 */
 //			int target = (int) ((Math.random() * (9999 - 1000)) + 1000);
 				Guess.reset(first);
-				int target;
-				if (first == 1000)
-					 target = i + 2166;
-				else
-					target = i;
+				int target = i;
 				Result res = new Result();
 				System.out.println();
 				System.out.println("Guess\tResponse");
@@ -87,7 +83,7 @@ public class GuessRunner {
 					res = processGuess(target, guess);
 				}
 				try {
-					File file = new File("record_knuth.csv");
+					File file = new File("record_knuth_1.csv");
 					FileWriter fr = new FileWriter(file, true);
 					BufferedWriter br = new BufferedWriter(fr);
 					PrintWriter pr = new PrintWriter(br);

@@ -42,15 +42,29 @@ public class GuessRunner {
 		return new Result(hits, strikes);
 	}
 
+	private static int getTargetNumber() {
+		int target = (int) (Math.random() * (9999-1000) + 1000);
+		char targetDigits[] = Integer.toString(target).toCharArray();
+		// Dodging AABB target values since other teams might use
+		// them as initial guess
+		if (targetDigits[0] == targetDigits[1] && targetDigits[2] == targetDigits[3]) {
+			return getTargetNumber();
+		}
+		return target;
+	}
+
 	public static void main(String[] args) {
 		int guess_cnt = 0;
 		/* A dummy value, you need to code here
 		 * to get a target number for your oponent
 		 * should be a random number between [1000-9999]
 		 */
-		int target = (int) (Math.random() * (9999-1000) + 1000);
+		int target = getTargetNumber();
 		Result res = new Result();
 		System.out.println("Guess\tResponse");
+		for (int i = 0; i < 100; i++) {
+			System.out.print(getTargetNumber() + ",");
+		}
 		while(res.getStrikes() < 4) {
 			/* take a guess from user provided class
 			 * the user provided class must be a Guess.class file

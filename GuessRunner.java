@@ -26,7 +26,6 @@ public class GuessRunner {
 				}
 			}
 		}
-		System.out.printf("\t");
 		if (strikes==4)	{ // game over
 			System.out.printf("4 strikes - Game over\n");
 			return new Result(hits, strikes);
@@ -49,16 +48,16 @@ public class GuessRunner {
 		 * to get a target number for your oponent
 		 * should be a random number between [1000-9999]
 		 */
-		int target = 3166;
+		int target = (int) (Math.random() * (9999-1000) + 1000);
 		Result res = new Result();
-		System.out.println("Guess\tResponse\n");
+		System.out.println("Guess\tResponse");
 		while(res.getStrikes() < 4) {
 			/* take a guess from user provided class
 			 * the user provided class must be a Guess.class file
 			 * that has implemented a static function called make_guess()
 			 */
 			int guess = Guess.make_guess(res.getHits(), res.getStrikes());
-			System.out.printf("%d\n", guess);
+			System.out.printf("%d\t", guess);
 
 			if (guess == -1) {	// user quits
 				System.out.printf("you quit: %d\n", target);

@@ -10,7 +10,7 @@ import java.util.List;
  * PLEASE DO NOT CHANGE THE NAME OF THE CLASS AND THE METHOD
  */
 public class Guess {
-	private final static int INITIAL_GUESS = 1000;
+	private final static int INITIAL_GUESS = 1234;
 	private final static int NUMBER_LENGTH = 4;
 	private final static List<Integer> allNumbers = createAllNumber();;
 	private final static List<Result> allResults = createAllResult(NUMBER_LENGTH);;
@@ -25,26 +25,13 @@ public class Guess {
 			myGuess = guess(new Result(hits, strike));
 		}
 		lastGuess = myGuess;
-		return myGuess;
+		return lastGuess;
 	}
 
-	//	Knuth mix max guess
+	//	Wrapper function for guessing
 	public static Integer guess(Result result){
-		removeRemainingNumber(remainingNumbers, lastGuess, result);
-		int guess = remainingNumbers.get(0);
-		int minMaximum = Integer.MAX_VALUE;
-		for (Integer number: allNumbers){
-			int maximum = 0;
-			for (Result r: allResults){
-				int removedIntegerSize = getRemainingNumber(remainingNumbers, number, r).size();
-				maximum = Math.max(removedIntegerSize, maximum);
-			}
-			if (maximum < minMaximum){
-				minMaximum = maximum;
-				guess = number;
-			}
-		}
-		return guess;
+		remainingNumbers = removeRemainingNumber(remainingNumbers, lastGuess, result);
+		return entropy(remainingNumbers,result);
 	}
 
 	//	get remaining number base on the previous guess and result of previous guess either from previous cache or from new array
@@ -59,12 +46,13 @@ public class Guess {
 	}
 
 	//	remove from an array all unfit guesses base on previous guess and result
-	private static void removeRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result){
+	private static List<Integer> removeRemainingNumber(List<Integer> numbers, Integer lastGuess, Result result){
 		for (int i = numbers.size() - 1; i >= 0; i--) {
 			Result temp = checkGuess(lastGuess, numbers.get(i));
 			if (temp.getStrikes() != result.getStrikes() || temp.getHits() != result.getHits())
 				numbers.remove(i);
 		}
+		return numbers;
 	}
 
 	private static Result checkGuess(int target, int guess) {
@@ -96,6 +84,69 @@ public class Guess {
 		return new Result(hits, strikes);
 	}
 
+//	Knuth algorithm using mini max to further reduce the possible guesses
+	private static int miniMax(List<Integer> staringArray, Result result){
+		List<Integer> bestGuess = new ArrayList<>();
+		bestGuess.add(staringArray.get(0));
+		int miniMax = Integer.MAX_VALUE;
+		for (Integer number : allNumbers){
+			int maximum = 0;
+			for (Result r: allResults){
+				int removedIntegerSize = getRemainingNumber(staringArray, number, r).size();
+				maximum = Math.max(removedIntegerSize, maximum);
+			}
+			if (maximum == miniMax)
+				bestGuess.add(number);
+			if (maximum < miniMax){
+				miniMax = maximum;
+				bestGuess.clear();
+				bestGuess.add(number);
+			}
+		}
+
+		List<Integer> consistentGuess = getRemainingNumber(bestGuess, lastGuess, result);
+		if (!consistentGuess.isEmpty()) {
+			int index = (int) Math.random() * consistentGuess.size();
+			return consistentGuess.get(index);
+		}
+		int index = (int) Math.random() * bestGuess.size();
+		return bestGuess.get(index);
+	}
+
+//	Algorithm utilize size entropy to reduce the possible guess
+	private static int entropy(List<Integer> startingArray, Result result){
+		double maxEntropy = 0;
+		int totalSize = startingArray.size();
+		List<Integer> entropyGuess = new ArrayList<>();
+		entropyGuess.add(startingArray.get(0));
+		for (Integer number: allNumbers){
+			double entropy = 0;
+			for (Result r: allResults){
+				int partitionSize = getRemainingNumber(startingArray, number, r).size();
+				if (partitionSize != 0){
+					double I = Math.log(1.0 * totalSize/partitionSize)/Math.log(2);
+					double P = 1.0 * partitionSize/totalSize;
+					entropy += entropy + I * P;
+				}
+			}
+			if (entropy == maxEntropy && entropy > 0)
+				entropyGuess.add(number);
+			if (entropy > maxEntropy){
+				maxEntropy = entropy;
+				entropyGuess.clear();
+				entropyGuess.add(number);
+			}
+		}
+
+		List<Integer> consistentGuess = getRemainingNumber(entropyGuess, lastGuess, result);
+		if (!consistentGuess.isEmpty()) {
+			int index = (int) Math.random() * consistentGuess.size();
+			return consistentGuess.get(index);
+		}
+		int index = (int) Math.random() * entropyGuess.size();
+		return entropyGuess.get(index);
+	}
+
 	//	create all possible guesses from 1000 to 9999
 	private static List<Integer> createAllNumber(){
 		final List<Integer> result = new LinkedList<>();
@@ -112,7 +163,9 @@ public class Guess {
 			for (int strikes = 0; strikes < length; strikes++){
 				int sum = hits + strikes;
 				if (sum <= length && !(strikes == length - 1 && hits == length)) {
-					result.add(new Result(hits, strikes));
+					if (!(strikes == 3 && hits == 1)) {
+						result.add(new Result(hits, strikes));
+					}
 				}
 			}
 		}

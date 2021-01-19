@@ -62,9 +62,6 @@ public class GuessRunner {
 		int target = getTargetNumber();
 		Result res = new Result();
 		System.out.println("Guess\tResponse");
-		for (int i = 0; i < 100; i++) {
-			System.out.print(getTargetNumber() + ",");
-		}
 		while(res.getStrikes() < 4) {
 			/* take a guess from user provided class
 			 * the user provided class must be a Guess.class file
